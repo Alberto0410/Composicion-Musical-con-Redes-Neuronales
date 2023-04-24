@@ -10,8 +10,9 @@ m21.environment.set("musescoreDirectPNGPath",     "C:/MuseScore4/bin/MuseScore4.
 m21.environment.set("musicxmlPath", "C:/MuseScore4/bin/MuseScore4.exe")
 us['musicxmlPath']
 
-songs_path = 'deutschl/test'
-long_nota = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4]
+SONGS_PATH = 'deutschl/test'
+SAVE_DIR = 'data_preprocesed'
+LONG_NOTES = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4]
 
 def load_music(path):
     '''Carga todos los archivos de música que están en un directorio.'''
@@ -82,26 +83,68 @@ def transpose_song(song):
 
     return trans_song
 
-def preprocesamiento(path):
+
+def encode_song(song, min_dur = 0.25):
+    '''Dada una canción, se pasa a un formato de str, es decir, en formato 
+    simbólico. Se representan como series de tiempo
+    
+    En caso de que sea la primera vez que aparece una nota, se guardara su num de nota
+    En caso de que se repita, guardaremos un _ por cada cuarto de nota que dure
+    Y en caso de que sea un silencio, guardaremos una r'''
+    time_serie = []
+
+    #tomamos todos los items de la cancion
+    for item in song.flat.notesAndRests:
+        #consideramos si es una nota, entonces obtenemos el num de nota
+        if isinstance(item, m21.note.Note):
+            symbol = item.pitch.midi
+        
+        #ahora el caso en que sea silencio
+        elif isinstance(item, m21.note.Rest):
+            symbol = 'r'
+
+        #convertimos la melodia a una serie de tiempo
+        duration = int(item.duration.quarterLength / min_dur)
+        for time in range(duration):
+            if time == 0:
+                time_serie.append(symbol)
+            else:
+                time_serie.append('_')
+    
+    #pasamos la lista a un string
+    enc_song = " ".join(map(str, time_serie))
+    return enc_song
+
+
+def preproces(path):
     songs = load_music(path)
     print(f'El número de archivos cargados es {len(songs)}')
 
     #verificamos que todas las cancioes cumplan el filtro de la duracion
-    for song in songs:
-        if not filtro_duracion(song, long_nota):
+    for i, song in enumerate(songs):
+        if not filtro_duracion(song, LONG_NOTES):
             continue
 
-    #transponemos las canciones
-    song = transpose_song(song)
+        #transponemos las canciones
+        song = transpose_song(song)
+
+        #codificamos las canciones
+        enc_song = encode_song(song)
+
+        #guardamos las canciones en formato simbolico en un directorio
+        save_path = os.path.join(SAVE_DIR, str(i))
+
+        with open(save_path, 'w') as f:
+            f.write(enc_song)
 
 
 if __name__ == '__main__':
-    songs = load_music(songs_path)
+    songs = load_music(SONGS_PATH)
     print(f'Se han cargado {len(songs)} archivos')
     song = songs[0] 
 
-    print(f'Tiene duracion aceptable? {filtro_duracion(song, long_nota)}')
+    preproces(SONGS_PATH)
+
+
     transpose_song = transpose_song(song)
-    
-    song.show()
     transpose_song.show()
