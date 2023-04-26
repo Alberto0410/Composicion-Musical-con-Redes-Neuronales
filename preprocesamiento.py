@@ -1,5 +1,6 @@
 # !pip install music21
 import os
+import json
 #music21 nos permite manipular musica simbolica en python
 # sirve para convertir archivos simbolicos a otros formatos 
 import music21 as m21
@@ -12,6 +13,8 @@ us['musicxmlPath']
 
 SONGS_PATH = 'deutschl/test'
 SAVE_DIR = 'data_preprocesed'
+FINAL_PATH = 'dataset_doc'
+MAP_PATH = 'dic.json'
 LONG_NOTES = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4]
 
 def load_music(path):
@@ -138,13 +141,71 @@ def preproces(path):
             f.write(enc_song)
 
 
-if __name__ == '__main__':
-    songs = load_music(SONGS_PATH)
-    print(f'Se han cargado {len(songs)} archivos')
-    song = songs[0] 
+def load(file_path):
+    'Función que dado un archivo, lo carga y regresa su contenido'
+    with open(file_path, 'r') as f:
+        song = f.read()
+    return song
 
+def doc_dataset(data_path, final_path, max_lenght = 64):
+    '''Función que crea un solo documento donde estan 
+    guardadas todas las canciones.
+
+    Para separa cada canción de otra se usará un delimitador.
+    Entrada:
+    data_path : directorio donde están las canciones en formato simbólico
+    final_path : directorio donde se guardara el documento final
+    max_length : longitud máxima que tendrá cada canción para poder meterla a la RN
+    '''
+    delim = '/ ' * max_lenght
+
+    songs = ''
+
+    #iteramos sobre todas las canciones
+    for path, _, files in os.walk(data_path):
+        for file in files:
+            #leemos todas las canciones
+            song = load(os.path.join(path, file))
+            
+            #agregamos la cancion al dataset
+            songs += song + ' ' + delim
+
+    #el delimitador cuenta con un estpacio al final, el cual no consideramos
+    songs = songs[:-1]
+    
+    #guardamos el dataset y lo regresamos
+    with open(final_path, 'w') as f:
+        f.write(songs)
+
+    return songs
+
+
+def translate(songs, map_path):
+    '''Función que asocia a cada simbolo un entero con el objetivo de 
+    poder usarlo en la RN
+    
+    Entrada:
+    songs : dataset de canciones en formato simbolico
+    map_path : directorio donde se guardara el diccionario en formato .json'''
+    mapping = {}
+
+    #obtenemos todos los simbolos
+    songs = songs.split()
+    voc = list(set(songs))
+
+    #asignamos un entero a cada simbolo
+    for i, symbol in enumerate(voc):
+        mapping[symbol] = i
+
+    #guardamos el diccionario en un archivo json
+    with open(map_path, 'w') as f:
+        json.dump(mapping, f, indent = 4)
+
+def main():
     preproces(SONGS_PATH)
+    songs = doc_dataset(SAVE_DIR, FINAL_PATH)
+    translate(songs, MAP_PATH)
 
 
-    transpose_song = transpose_song(song)
-    transpose_song.show()
+if __name__ == '__main__':
+    main()
