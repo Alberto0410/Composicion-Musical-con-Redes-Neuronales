@@ -4,6 +4,8 @@ import json
 #music21 nos permite manipular musica simbolica en python
 # sirve para convertir archivos simbolicos a otros formatos 
 import music21 as m21
+import numpy as np
+import tensorflow.keras as keras
 
 #indicamos que queremos usar Musescore 4 para abrir los archivos
 us = m21.environment.UserSettings()
@@ -201,11 +203,61 @@ def translate(songs, map_path):
     with open(map_path, 'w') as f:
         json.dump(mapping, f, indent = 4)
 
+def convert_to_int(songs):
+    '''Función que convierte las canciones a enteros usando el diccionario'''
+    int_songs_list = []
+
+    #cargamos el diccionario
+    with open(MAP_PATH, 'r') as f:
+        mapping = json.load(f)
+
+    #pasamos las canciones a una lista
+    songs = songs.split()
+
+    for symbol in songs:
+        #convertimos cada simbolo a entero usando el diccionario
+        int_songs_list.append(mapping[symbol])
+
+    return int_songs_list
+
+def training_seq(seq_len):
+    '''Función que crea secuencias de entrenamiento de longitud seq_len para ir
+    alimentando la red neuronal recurrente y que en cada paso nos devuelva una
+    nueva nota de la melodía
+    
+    Por ejemplo si la melidía es [1, 2, 3, 4, 5] y seq_len = 3, entonces debemos de 
+    meterle a la red [1, 2, 3] y nos debe regresar [4]'''
+
+    input = []
+    targets = []
+
+
+    #cargamos los datos y los pasamos a enteros
+    songs = load(FINAL_PATH)
+    int_songs = convert_to_int(songs)
+
+    #generamos el numero de secuencias de long seq_len
+    num_seq = len(int_songs) - seq_len
+
+    for i in range(num_seq):
+        input.append(int_songs[i:i+seq_len])
+        targets.append(int_songs[i+seq_len])
+    
+    #pasamos las secuenas a one-hot enconding, para ello necesitamos el numero 
+    # de secuencia que tenemos, su longitud y el tamaño del vocabulario
+    voc_len = len(set(int_songs))
+    inputs = keras.utils.to_categorical(input, num_classes = voc_len)
+    targets = np.array(targets)
+
+    return inputs, targets
+
+
 def main():
     preproces(SONGS_PATH)
     songs = doc_dataset(SAVE_DIR, FINAL_PATH)
     translate(songs, MAP_PATH)
-
+    inputs, targets = training_seq(64)
+    a = 1
 
 if __name__ == '__main__':
     main()
