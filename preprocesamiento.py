@@ -5,7 +5,7 @@ import json
 # sirve para convertir archivos simbolicos a otros formatos 
 import music21 as m21
 import numpy as np
-# import tensorflow.keras as keras
+import tensorflow.keras as keras
 
 #indicamos que queremos usar Musescore 4 para abrir los archivos
 us = m21.environment.UserSettings()
@@ -14,9 +14,11 @@ m21.environment.set("musicxmlPath", "C:/MuseScore4/bin/MuseScore4.exe")
 us['musicxmlPath']
 
 SONGS_PATH = 'deutschl/erk'
+# SONGS_PATH = 'deutschl/test'
 SAVE_DIR = 'data_preprocesed'
 FINAL_PATH = 'dataset_doc'
 MAP_PATH = 'dic.json'
+SEQ_LEN = 64
 LONG_NOTES = [0.25, 0.5, 0.75, 1.0, 1.5, 2, 3, 4]
 
 def load_music(path):
@@ -153,7 +155,7 @@ def load(file_path):
         song = f.read()
     return song
 
-def doc_dataset(data_path, final_path, max_lenght = 64):
+def doc_dataset(data_path, final_path, max_lenght = SEQ_LEN):
     '''Función que crea un solo documento donde estan 
     guardadas todas las canciones.
 
@@ -250,9 +252,13 @@ def training_seq(seq_len):
     #pasamos las secuenas a one-hot enconding, para ello necesitamos el numero 
     # de secuencia que tenemos, su longitud y el tamaño del vocabulario
     voc_len = len(set(int_songs))
-    inputs = np.eye(voc_len)[input]
-    # inputs = keras.utils.to_categorical(input, num_classes = voc_len)
-    targets = np.array(targets)
+
+    #(# de secuencias, longitud de cada secuencia, tamaño del vocabulario)
+
+
+    # inputs = np.eye(voc_len)[input]
+    inputs = keras.utils.to_categorical(input, num_classes = voc_len)
+    # targets = np.array(targets)
 
     return inputs, targets
 
@@ -261,8 +267,6 @@ def main():
     preproces(SONGS_PATH)
     songs = doc_dataset(SAVE_DIR, FINAL_PATH)
     translate(songs, MAP_PATH)
-    inputs, targets = training_seq(64)
-    a = 1
 
 if __name__ == '__main__':
     main()
