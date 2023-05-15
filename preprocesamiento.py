@@ -5,7 +5,7 @@ import json
 # sirve para convertir archivos simbolicos a otros formatos 
 import music21 as m21
 import numpy as np
-import tensorflow.keras as keras
+# import tensorflow.keras as keras
 
 #indicamos que queremos usar Musescore 4 para abrir los archivos
 us = m21.environment.UserSettings()
@@ -13,11 +13,11 @@ m21.environment.set("musescoreDirectPNGPath",     "C:/MuseScore4/bin/MuseScore4.
 m21.environment.set("musicxmlPath", "C:/MuseScore4/bin/MuseScore4.exe")
 us['musicxmlPath']
 
-SONGS_PATH = 'deutschl/test'
+SONGS_PATH = 'deutschl/erk'
 SAVE_DIR = 'data_preprocesed'
 FINAL_PATH = 'dataset_doc'
 MAP_PATH = 'dic.json'
-LONG_NOTES = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4]
+LONG_NOTES = [0.25, 0.5, 0.75, 1.0, 1.5, 2, 3, 4]
 
 def load_music(path):
     '''Carga todos los archivos de música que están en un directorio.'''
@@ -142,6 +142,10 @@ def preproces(path):
         with open(save_path, 'w') as f:
             f.write(enc_song)
 
+        #vamos mostrando el avance
+        if i % 10 == 0:
+            print(f'{i} canciones procesadas')
+
 
 def load(file_path):
     'Función que dado un archivo, lo carga y regresa su contenido'
@@ -225,7 +229,7 @@ def training_seq(seq_len):
     alimentando la red neuronal recurrente y que en cada paso nos devuelva una
     nueva nota de la melodía
     
-    Por ejemplo si la melidía es [1, 2, 3, 4, 5] y seq_len = 3, entonces debemos de 
+    Por ejemplo si la melodía es [1, 2, 3, 4, 5] y seq_len = 3, entonces debemos de 
     meterle a la red [1, 2, 3] y nos debe regresar [4]'''
 
     input = []
@@ -246,7 +250,8 @@ def training_seq(seq_len):
     #pasamos las secuenas a one-hot enconding, para ello necesitamos el numero 
     # de secuencia que tenemos, su longitud y el tamaño del vocabulario
     voc_len = len(set(int_songs))
-    inputs = keras.utils.to_categorical(input, num_classes = voc_len)
+    inputs = np.eye(voc_len)[input]
+    # inputs = keras.utils.to_categorical(input, num_classes = voc_len)
     targets = np.array(targets)
 
     return inputs, targets
