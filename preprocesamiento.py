@@ -18,7 +18,7 @@ SONGS_PATH = 'deutschl/erk'
 SAVE_DIR = 'data_preprocesed'
 FINAL_PATH = 'dataset_doc'
 MAP_PATH = 'dic.json'
-SEQ_LEN = 64
+SEQ_LEN = 32
 LONG_NOTES = [0.25, 0.5, 0.75, 1.0, 1.5, 2, 3, 4]
 
 def load_music(path):
@@ -198,7 +198,7 @@ def translate(songs, map_path):
     mapping = {}
 
     #obtenemos todos los simbolos
-    songs = songs.split()
+    songs = songs.split(' ')
     voc = list(set(songs))
 
     #asignamos un entero a cada simbolo
@@ -254,11 +254,11 @@ def training_seq(seq_len):
     voc_len = len(set(int_songs))
 
     #(# de secuencias, longitud de cada secuencia, tamaño del vocabulario)
+    inputs = np.eye(voc_len)[input]
 
-
-    # inputs = np.eye(voc_len)[input]
-    inputs = keras.utils.to_categorical(input, num_classes = voc_len)
-    # targets = np.array(targets)
+    #pasamos a one-hot encoding los targets
+    targets = np.eye(voc_len)[targets]
+    print(targets.shape)
 
     return inputs, targets
 

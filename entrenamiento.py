@@ -2,8 +2,9 @@ from preprocesamiento import training_seq, SEQ_LEN
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
 
-import tensorflow.keras as keras
+# import tensorflow.keras as keras
 
 #es el tamaño del diccionario
 OUTPUT_UNITS = 38
@@ -11,28 +12,24 @@ NUM_UNITS = 256
 LOSS =  nn.CrossEntropyLoss()
 LR = 0.01
 EPOCH = 10
-BATCH_SIZE = 64
+BATCH_SIZE = 38
 SAVE_MODEL_PATH = 'model.pt'
 
 #clase para generar una red lstm
 class model_lstm(nn.Module):
     def __init__(self, output_units, num_units):
         super(model_lstm, self).__init__()
-        self.lstm = nn.LSTM(output_units, num_units, batch_first = True)
+        self.lstm = nn.LSTM(output_units, num_units)
         self.dropout = nn.Dropout(0.1)
         self.linear = nn.Linear(num_units, output_units)
 
     def feed_forward(self, x):
-        # output, _ = self.lstm(x)
-        # output = self.dropout(output)
-        # output = self.linear(output)
-        # return output
-    
-        _, (h, _) = self.lstm(x)
-        x = self.dropout(h)
-        x = self.linear(x)
+        output, _ = self.lstm(x)
+        output = self.dropout(output)
+        output = self.linear(output)
 
-        return x
+        return output
+
 
 def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = LR):
     inputs, targets = training_seq(SEQ_LEN)
@@ -44,21 +41,48 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = 
     red_lstm = model_lstm(output_units, num_units)
     optimizer = optim.Adam(red_lstm.parameters(), lr = lr)
 
-    #emepezamos a entrenar la red
+    #entrenamos
     for epoch in range(EPOCH):
-        optimizer.zero_grad()
-        output = red_lstm.feed_forward(inputs)
+        loss_total = 0
 
-        #calculamos el error y actualizamos los pesos
-        # loss_val = loss(output.permute(0, 2, 1), targets)
-        loss_val = loss(output.view(-1, output_units), targets(-1))
-        loss_val.backward()
-        optimizer.step()
+        #mini batch
+        for i in range(0, len(inputs), BATCH_SIZE):
+            batch_inputs = inputs[i:i+BATCH_SIZE]
+            batch_targets = targets[i:i+BATCH_SIZE]
 
-        print(f'Epoch: {epoch + 1} \t Loss: {loss_val.item():.5f}')
+            optimizer.zero_grad()
+
+            #hacemos feed forward
+            outputs = red_lstm.feed_forward(batch_inputs)
+            loss_val = loss(outputs.permute(0, 2, 1), batch_targets)
+
+            #backpropagation
+            loss_val.backward()
+            optimizer.step()
+
+            loss_total += loss_val.item()
+
+        print(f'Epoch: {epoch + 1} \t Loss: {loss_total:.5f}')
 
     #guardamos el modelo
     torch.save(red_lstm.state_dict(), SAVE_MODEL_PATH)
+
+
+    # #emepezamos a entrenar la red
+    # for epoch in range(EPOCH):
+    #     optimizer.zero_grad()
+    #     output = red_lstm.feed_forward(inputs)
+
+    #     #calculamos el error y actualizamos los pesos
+    #     # loss_val = loss(output.permute(0, 2, 1), targets)
+    #     loss_val = loss(output.view(-1, output_units), targets(-1))
+    #     loss_val.backward()
+    #     optimizer.step()
+
+    #     print(f'Epoch: {epoch + 1} \t Loss: {loss_val.item():.5f}')
+
+    # #guardamos el modelo
+    # torch.save(red_lstm.state_dict(), SAVE_MODEL_PATH)
 
 
 if __name__ == '__main__':
