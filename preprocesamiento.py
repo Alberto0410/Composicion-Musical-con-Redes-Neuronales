@@ -255,10 +255,7 @@ def training_seq(seq_len):
 
     #(# de secuencias, longitud de cada secuencia, tamaño del vocabulario)
     inputs = np.eye(voc_len)[input]
-
-    #pasamos a one-hot encoding los targets
-    targets = np.eye(voc_len)[targets]
-    print(targets.shape)
+    targets = np.array(targets)
 
     return inputs, targets
 

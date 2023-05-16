@@ -12,7 +12,7 @@ NUM_UNITS = 256
 LOSS =  nn.CrossEntropyLoss()
 LR = 0.01
 EPOCH = 10
-BATCH_SIZE = 38
+BATCH_SIZE = 32
 SAVE_MODEL_PATH = 'model.pt'
 
 #clase para generar una red lstm
@@ -22,11 +22,15 @@ class model_lstm(nn.Module):
         self.lstm = nn.LSTM(output_units, num_units)
         self.dropout = nn.Dropout(0.1)
         self.linear = nn.Linear(num_units, output_units)
+        
+        #agragamos una capa softmax
+        self.softmax = nn.Softmax(dim = 1)
 
     def feed_forward(self, x):
         output, _ = self.lstm(x)
         output = self.dropout(output)
         output = self.linear(output)
+        output = self.softmax(output)
 
         return output
 
@@ -54,13 +58,13 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = 
 
             #hacemos feed forward
             outputs = red_lstm.feed_forward(batch_inputs)
-            loss_val = loss(outputs.permute(0, 2, 1), batch_targets)
+            loss_val = loss(outputs, batch_targets)
 
             #backpropagation
-            loss_val.backward()
+            loss_val.sum().backward()
             optimizer.step()
 
-            loss_total += loss_val.item()
+            loss_total += loss_val.sum().item()
 
         print(f'Epoch: {epoch + 1} \t Loss: {loss_total:.5f}')
 
