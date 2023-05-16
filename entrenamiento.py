@@ -18,22 +18,27 @@ SAVE_MODEL_PATH = 'model.pt'
 class model_lstm(nn.Module):
     def __init__(self, output_units, num_units):
         super(model_lstm, self).__init__()
-        self.lstm = nn.LSTM(output_units, num_units)
+        self.lstm = nn.LSTM(output_units, num_units, batch_first = True)
         self.dropout = nn.Dropout(0.1)
         self.linear = nn.Linear(num_units, output_units)
 
     def feed_forward(self, x):
-        output, _ = self.lstm(x)
-        output = self.dropout(output)
-        output = self.linear(output)
+        # output, _ = self.lstm(x)
+        # output = self.dropout(output)
+        # output = self.linear(output)
+        # return output
+    
+        _, (h, _) = self.lstm(x)
+        x = self.dropout(h)
+        x = self.linear(x)
 
-        return output
+        return x
 
 def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = LR):
     inputs, targets = training_seq(SEQ_LEN)
     #los pasamos a tensores
-    inputs = torch.Tensor(inputs)
-    targets = torch.LongTensor(targets)
+    inputs = torch.from_numpy(inputs).float()
+    targets = torch.from_numpy(targets).long()
 
     #creamos la red y el optimizador
     red_lstm = model_lstm(output_units, num_units)
@@ -46,7 +51,7 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = 
 
         #calculamos el error y actualizamos los pesos
         # loss_val = loss(output.permute(0, 2, 1), targets)
-        loss_val = loss(output, targets)
+        loss_val = loss(output.view(-1, output_units), targets(-1))
         loss_val.backward()
         optimizer.step()
 
