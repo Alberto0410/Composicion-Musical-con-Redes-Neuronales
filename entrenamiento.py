@@ -10,7 +10,7 @@ import numpy as np
 OUTPUT_UNITS = 38
 NUM_UNITS = 256
 LOSS =  nn.CrossEntropyLoss()
-LR = 0.01
+LR = 0.1
 EPOCH = 10
 BATCH_SIZE = 32
 SAVE_MODEL_PATH = 'model.pt'
@@ -37,6 +37,7 @@ class model_lstm(nn.Module):
 
 def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = LR):
     inputs, targets = training_seq(SEQ_LEN)
+    targets = np.eye(38)[targets]
     #los pasamos a tensores
     inputs = torch.from_numpy(inputs).float()
     targets = torch.from_numpy(targets).long()
