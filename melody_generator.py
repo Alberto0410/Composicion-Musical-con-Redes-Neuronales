@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 import torch.optim as optim
 from preprocesamiento import SEQ_LEN, MAP_PATH
-from entrenamiento import model_lstm, OUTPUT_UNITS, NUM_UNITS
+from entrenamiento import model_lstm
 
 
 class MelodyGen:
@@ -13,7 +13,8 @@ class MelodyGen:
         self.path_model = path_model
 
         #cargamos la red de pytorch
-        self.model = model_lstm(OUTPUT_UNITS, NUM_UNITS)
+        # self.model = model_lstm(OUTPUT_UNITS, NUM_UNITS)
+        self.model = model_lstm(38, 256)
         self.model.load_state_dict(torch.load(self.path_model))
 
         #cargamos el diccionario
@@ -61,10 +62,11 @@ class MelodyGen:
             # start_oh = torch.from_numpy(start_oh).float()
 
             with torch.no_grad():
-                output = self.model.feed_forward(start_oh)
+                print(f'start_oh: {start_oh.shape}')
+                output1 = self.model.feed_forward(start_oh)
 
             #obtenemos la nota usando la temperatura
-            output_int = self.sample_temp(output.detach().numpy(), temp)
+            output_int = self.sample_temp(output1.detach().numpy(), temp)
 
             #agregamos la nota a la melodía
             start_melody.append(output_int)
