@@ -11,7 +11,7 @@ OUTPUT_UNITS = 38
 NUM_UNITS = 256
 LOSS =  nn.CrossEntropyLoss()
 LR = 0.1
-EPOCH = 5
+EPOCH = 10
 BATCH_SIZE = 32
 SAVE_MODEL_PATH = 'model.pt'
 
@@ -88,7 +88,7 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = 
         print(f'Epoch: {epoch + 1} \t Loss: {loss_total:.5f}')
 
     #guardamos el modelo
-    # torch.save(red_lstm.state_dict(), SAVE_MODEL_PATH) 
+    torch.save(red_lstm.state_dict(), SAVE_MODEL_PATH) 
 
 
 if __name__ == '__main__':

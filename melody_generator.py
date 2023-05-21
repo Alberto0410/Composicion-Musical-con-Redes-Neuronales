@@ -52,7 +52,6 @@ class MelodyGen:
 
             #pasamos a one hot encoding la semilla para poder
             #hacer predicciones con la red entrenada
-            # start_oh = np.eye(len(self.map))[start_melody]
             start_oh = F.one_hot(torch.tensor(start_melody), num_classes = len(self.map))
             start_oh = start_oh.unsqueeze(0).float()
 
@@ -60,7 +59,6 @@ class MelodyGen:
                 # print(f'start_oh: {start_oh.shape}')
                 output1 = self.model.feed_forward(start_oh)[0]
 
-            print(f'output1: {output1.shape}')
 
             #obtenemos la nota usando la temperatura
             output_int = self.sample_temp(output1.detach().numpy(), temp)
@@ -87,7 +85,6 @@ class MelodyGen:
         output = np.exp(pred) / np.sum(np.exp(pred))
 
         #elegimos una nota de acuerdo a la distribución de probabilidad obtenida
-        print(output.shape)
         output_int = np.random.choice(range(len(output)), p = output)
 
         return output_int
