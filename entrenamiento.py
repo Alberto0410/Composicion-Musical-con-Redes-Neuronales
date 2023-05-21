@@ -11,7 +11,7 @@ OUTPUT_UNITS = 38
 NUM_UNITS = 256
 LOSS =  nn.CrossEntropyLoss()
 LR = 0.1
-EPOCH = 10
+EPOCH = 5
 BATCH_SIZE = 32
 SAVE_MODEL_PATH = 'model.pt'
 
@@ -27,9 +27,13 @@ class model_lstm(nn.Module):
         self.softmax = nn.Softmax(dim = 1)
 
     def feed_forward(self, x):
+        print(f'x shape: {x.shape}')
         output, _ = self.lstm(x)
+        print(f'output shape: {output.shape}')
         output = self.dropout(output)
+        print(f'output shape: {output.shape}')
         output = self.linear(output)
+        print(f'output shape: {output.shape}')
         output = self.softmax(output)
 
         return output
@@ -70,23 +74,6 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = 
         print(f'Epoch: {epoch + 1} \t Loss: {loss_total:.5f}')
 
     #guardamos el modelo
-    torch.save(red_lstm.state_dict(), SAVE_MODEL_PATH)
-
-
-    # #emepezamos a entrenar la red
-    # for epoch in range(EPOCH):
-    #     optimizer.zero_grad()
-    #     output = red_lstm.feed_forward(inputs)
-
-    #     #calculamos el error y actualizamos los pesos
-    #     # loss_val = loss(output.permute(0, 2, 1), targets)
-    #     loss_val = loss(output.view(-1, output_units), targets(-1))
-    #     loss_val.backward()
-    #     optimizer.step()
-
-    #     print(f'Epoch: {epoch + 1} \t Loss: {loss_val.item():.5f}')
-
-    # #guardamos el modelo
     # torch.save(red_lstm.state_dict(), SAVE_MODEL_PATH)
 
 
