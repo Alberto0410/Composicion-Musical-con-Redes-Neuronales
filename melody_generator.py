@@ -6,6 +6,7 @@ import numpy as np
 import torch.optim as optim
 from preprocesamiento import SEQ_LEN, MAP_PATH
 from entrenamiento import model_lstm
+import music21 as m21
 
 
 class MelodyGen:
@@ -52,13 +53,12 @@ class MelodyGen:
 
             #pasamos a one hot encoding la semilla para poder
             #hacer predicciones con la red entrenada
-            start_oh = F.one_hot(torch.tensor(start_melody), num_classes = len(self.map))
+            # print(start_melody)
+            start_oh = F.one_hot(torch.tensor(start_melody).to(torch.int64), num_classes = len(self.map))
             start_oh = start_oh.unsqueeze(0).float()
 
             with torch.no_grad():
-                # print(f'start_oh: {start_oh.shape}')
                 output1 = self.model.feed_forward(start_oh)[0]
-
 
             #obtenemos la nota usando la temperatura
             output_int = self.sample_temp(output1.detach().numpy(), temp)
@@ -82,6 +82,7 @@ class MelodyGen:
     def sample_temp(self, output, temp):
         #reescalamos y despues aplicamos softmax
         pred = np.log(output) / temp
+        # print(pred)
         output = np.exp(pred) / np.sum(np.exp(pred))
 
         #elegimos una nota de acuerdo a la distribución de probabilidad obtenida
@@ -90,9 +91,54 @@ class MelodyGen:
         return output_int
 
 
+    def midi(self, melody, file_name = 'melody_generated.midi', step_duration = 0.25):
+        '''Función que toma una melodía generada por la red y la transforma en un 
+        archivo .midi'''
+
+        #creamos un stream
+        stream = m21.stream.Stream()
+
+        #dado que el simbolo "_" representa un cuarto de nota, entonces
+        #vamos a ir contando cuantas veces se repite una nota
+        start_symbol = None
+        counter = 1
+
+        #iteramos sobre la melodía
+        for i, symbol in enumerate(melody):
+            #dividimos los casos en los que es una nota/silencio o si se mantiene la nota
+            #consideramos el caso en que la melodía termina con una nota y no con silencio
+            if symbol != '_' or i + 1 == len(melody):
+                
+                #nos aseguraos de no sea la primera vez que entramos al ciclo
+                if start_symbol is not None:
+                    #calculamos la duracion de la nota anterior
+                    len_duration = step_duration * counter
+
+                    #dividimos entre si es una nota o un silencio
+                    if start_symbol == 'r':
+                        m21_event = m21.note.Rest(quarterLength = len_duration)
+
+                    else:
+                        m21_event = m21.note.Note(int(start_symbol), quarterLength = len_duration)
+
+                    #agregamos el evento al stream
+                    stream.append(m21_event)
+
+                    #como ya no estamos contando cuanto duro la nota pasada, reiniciamos el contador
+                    counter = 1
+                
+                start_symbol = symbol
+
+            else:
+                counter += 1
+            
+        stream.write('midi', file_name)
+
+
 
 if __name__ == "__main__":
     mg = MelodyGen('model.pt')
-    seed = "55 _ _ _ 60 _ _ _ 55 _ _ _ 55 _"
+    seed = "67 _ _ _ _ _ 65 _ 64 _ 62 _ 60 _ _ _"
     melody = mg.generation(seed, 500, SEQ_LEN, 0.7)
     print(melody)
+    mg.midi(melody)

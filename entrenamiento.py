@@ -21,52 +21,39 @@ class model_lstm(nn.Module):
         super(model_lstm, self).__init__()
         # self.lstm = nn.LSTM(output_units, num_units)
         self.hidden_size = num_units
-        self.lstm = nn.LSTM(output_units, num_units, dropout = 0.25)
-        self.linear = nn.Linear(num_units, output_units)
+        self.lstm = nn.LSTM(output_units, num_units)
+        self.dropout = nn.Dropout(0.2)
+        self.linear = nn.Linear(num_units, output_units) 
         
         #agragamos una capa softmax
         self.softmax = nn.Softmax(dim = 1)
 
     def feed_forward(self, x):
-        # print(f'x shape: {x.shape}')
-        # output, _ = self.lstm(x)
-        # print(f'output shape: {output.shape}')
-        # # output = self.dropout(output)
-        # # print(f'output shape: {output.shape}')
-        # output = self.linear(output)
-        # print(f'output shape: {output.shape}')
-        # output = self.softmax(output)
+        lstm_out, _ = self.lstm(x)
+        lstm_out = self.dropout(lstm_out)
+        output = self.linear(lstm_out[:, -1, :])
+        output = self.softmax(output)
 
-        # batch_size = x.shape[0]
-        batch_size = 32
-        h0 = torch.zeros(1, batch_size, self.hidden_size).to(x.device)
-        c0 = torch.zeros(1, batch_size, self.hidden_size).to(x.device)
-
-        # print(f'x shape: {x.shape}')
-        output, _ = self.lstm(x, (h0, c0))
-        # print(f'output shape: {output.shape}')
-        output = self.linear(output[:, -1, :])  # Utilizamos solo la última salida de la secuencia
-        # print(f'output shape: {output.shape}')
         return output
 
+def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = LR, num_epochs = EPOCH, learning_rate = LR):
+    criterion = nn.CrossEntropyLoss()
+    model = model_lstm(output_units, num_units)
+    optimizer = torch.optim.Adam(model.parameters(), lr = lr)
 
-
-def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = LR):
+    try:
+        model.load_state_dict(torch.load(SAVE_MODEL_PATH))
+        print('Modelo cargado')
+    except:
+        print('Modelo nuevo')
+    
     inputs, targets = training_seq(SEQ_LEN)
-
-    #CHECAR SI LO PASAMOS A ONE HOT ENCODING O NO 
-    # targets = np.eye(38)[targets]
-    #los pasamos a tensores
     inputs = torch.from_numpy(inputs).float()
     targets = torch.from_numpy(targets).long()
 
-    #creamos la red y el optimizador
-    red_lstm = model_lstm(output_units, num_units)
-    optimizer = optim.Adam(red_lstm.parameters(), lr = lr)
-
-    #entrenamos
-    for epoch in range(EPOCH):
-        loss_total = 0
+    for epoch in range(num_epochs):
+        #error
+        loss = 0
 
         #mini batch
         for i in range(0, len(inputs), BATCH_SIZE):
@@ -76,19 +63,20 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = 
             optimizer.zero_grad()
 
             #hacemos feed forward
-            outputs = red_lstm.feed_forward(batch_inputs)
-            loss_val = loss(outputs, batch_targets)
+            outputs = model.feed_forward(batch_inputs)
+            loss = criterion(outputs, batch_targets)
 
             #backpropagation
-            loss_val.sum().backward()
+            loss.backward()
             optimizer.step()
 
-            loss_total += loss_val.sum().item()
+            loss += loss.item()
 
-        print(f'Epoch: {epoch + 1} \t Loss: {loss_total:.5f}')
+        if (epoch+1) % 10 == 0:
+            print(f'Epoch [{epoch+1}/{ num_epochs}], Loss: {loss.item()}')
 
-    #guardamos el modelo
-    torch.save(red_lstm.state_dict(), SAVE_MODEL_PATH) 
+    torch.save(model.state_dict(), SAVE_MODEL_PATH)
+
 
 
 if __name__ == '__main__':
