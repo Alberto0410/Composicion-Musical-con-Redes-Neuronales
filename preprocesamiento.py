@@ -5,7 +5,6 @@ import json
 # sirve para convertir archivos simbolicos a otros formatos 
 import music21 as m21
 import numpy as np
-import tensorflow.keras as keras
 
 #indicamos que queremos usar Musescore 4 para abrir los archivos
 us = m21.environment.UserSettings()
@@ -18,7 +17,7 @@ SONGS_PATH = 'deutschl/erk'
 SAVE_DIR = 'data_preprocesed'
 FINAL_PATH = 'dataset_doc'
 MAP_PATH = 'dic.json'
-SEQ_LEN = 32
+SEQ_LEN = 64
 LONG_NOTES = [0.25, 0.5, 0.75, 1.0, 1.5, 2, 3, 4]
 
 def load_music(path):

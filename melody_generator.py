@@ -62,6 +62,7 @@ class MelodyGen:
 
             #obtenemos la nota usando la temperatura
             output_int = self.sample_temp(output1.detach().numpy(), temp)
+            print(output_int)
 
             #agregamos la nota a la melodía
             start_melody.append(output_int)

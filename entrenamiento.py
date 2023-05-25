@@ -2,17 +2,15 @@ from preprocesamiento import training_seq, SEQ_LEN
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
+from torch.utils.data import Dataset, DataLoader
 
-# import tensorflow.keras as keras
 
 #es el tamaño del diccionario
 OUTPUT_UNITS = 38
 NUM_UNITS = 256
-LOSS =  nn.CrossEntropyLoss()
-LR = 0.1
+LR = 0.0001
 EPOCH = 10
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 SAVE_MODEL_PATH = 'model.pt'
 
 #clase para generar una red lstm
@@ -36,7 +34,7 @@ class model_lstm(nn.Module):
 
         return output
 
-def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = LR, num_epochs = EPOCH, learning_rate = LR):
+def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, lr = LR, num_epochs = EPOCH):
     criterion = nn.CrossEntropyLoss()
     model = model_lstm(output_units, num_units)
     optimizer = torch.optim.Adam(model.parameters(), lr = lr)
@@ -51,20 +49,17 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = 
     inputs = torch.from_numpy(inputs).float()
     targets = torch.from_numpy(targets).long()
 
+    dataset = torch.utils.data.TensorDataset(inputs, targets)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+
     for epoch in range(num_epochs):
-        #error
-        loss = 0
-
         #mini batch
-        for i in range(0, len(inputs), BATCH_SIZE):
-            batch_inputs = inputs[i:i+BATCH_SIZE]
-            batch_targets = targets[i:i+BATCH_SIZE]
-
+        for batch_inputs, batch_targets in dataloader:
             optimizer.zero_grad()
 
             #hacemos feed forward
             outputs = model.feed_forward(batch_inputs)
-            loss = criterion(outputs, batch_targets)
+            loss = criterion(outputs.squeeze(), batch_targets.squeeze())
 
             #backpropagation
             loss.backward()
@@ -72,8 +67,7 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, loss = LOSS, lr = 
 
             loss += loss.item()
 
-        if (epoch+1) % 10 == 0:
-            print(f'Epoch [{epoch+1}/{ num_epochs}], Loss: {loss.item()}')
+        print(f"Epoch {epoch + 1}/{EPOCH}, Loss: {loss.item()}")
 
     torch.save(model.state_dict(), SAVE_MODEL_PATH)
 
