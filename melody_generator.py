@@ -14,7 +14,6 @@ class MelodyGen:
         self.path_model = path_model
 
         #cargamos la red de pytorch
-        # self.model = model_lstm()
         self.model = model_lstm(38, 256)
         self.model.load_state_dict(torch.load(self.path_model))
 
@@ -53,15 +52,22 @@ class MelodyGen:
 
             #pasamos a one hot encoding la semilla para poder
             #hacer predicciones con la red entrenada
-            # print(start_melody)
-            start_oh = F.one_hot(torch.tensor(start_melody).to(torch.int64), num_classes = len(self.map))
-            start_oh = start_oh.unsqueeze(0).float()
+            print(start_melody)
+            start_np = np.reshape(start_melody, (1, len(start_melody), 1)) 
+            start_ten = torch.tensor(start_np, dtype = torch.float32)           # start_oh = F.one_hot(torch.tensor(start_melody).to(torch.int64), num_classes = len(self.map))
+            # start_oh = start_oh.unsqueeze(0).float()
 
+            #obtenemos la prediccion
             with torch.no_grad():
-                output1 = self.model.feed_forward(start_oh)[0]
+                output1 = self.model.feed_forward(start_ten)
+                print(output1)
+                print()
 
             #obtenemos la nota usando la temperatura
-            output_int = self.sample_temp(output1.detach().numpy(), temp)
+            # output_int = self.sample_temp(output1.detach().numpy(), temp)
+
+            #obtenemos la nota con mayor probabilidad
+            output_int = int(output1.argmax())
             print(output_int)
 
             #agregamos la nota a la melodía

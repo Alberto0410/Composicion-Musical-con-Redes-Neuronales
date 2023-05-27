@@ -5,6 +5,7 @@ import json
 # sirve para convertir archivos simbolicos a otros formatos 
 import music21 as m21
 import numpy as np
+import torch
 
 #indicamos que queremos usar Musescore 4 para abrir los archivos
 us = m21.environment.UserSettings()
@@ -17,7 +18,7 @@ SONGS_PATH = 'deutschl/erk'
 SAVE_DIR = 'data_preprocesed'
 FINAL_PATH = 'dataset_doc'
 MAP_PATH = 'dic.json'
-SEQ_LEN = 64
+SEQ_LEN = 32
 LONG_NOTES = [0.25, 0.5, 0.75, 1.0, 1.5, 2, 3, 4]
 
 def load_music(path):
@@ -177,7 +178,7 @@ def doc_dataset(data_path, final_path, max_lenght = SEQ_LEN):
             #agregamos la cancion al dataset
             songs += song + ' ' + delim
 
-    #el delimitador cuenta con un estpacio al final, el cual no consideramos
+    #el delimitador cuenta con un espacio al final, el cual no consideramos
     songs = songs[:-1]
     
     #guardamos el dataset y lo regresamos
@@ -252,8 +253,10 @@ def training_seq(seq_len):
     # de secuencia que tenemos, su longitud y el tamaño del vocabulario
     voc_len = len(set(int_songs))
 
-    #(# de secuencias, longitud de cada secuencia, tamaño del vocabulario)
-    inputs = np.eye(voc_len)[input]
+    #los inputs deben de tener dimension:
+    #(numero de secuencias, longitud de cada secuencia, tamaño del vocabulario)
+    # print(input[0])
+    inputs = torch.tensor(input, dtype = torch.float32).reshape(len(input), seq_len, 1)   
     targets = np.array(targets)
 
     return inputs, targets
