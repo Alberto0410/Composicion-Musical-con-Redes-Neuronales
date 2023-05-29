@@ -9,8 +9,8 @@ import numpy as np
 #es el tamaño del diccionario
 OUTPUT_UNITS = 38
 NUM_UNITS = 256
-LR = 0.01
-EPOCH = 3
+LR = 0.001
+EPOCH = 35
 BATCH_SIZE = 64
 SAVE_MODEL_PATH = 'model.pt'
 
@@ -47,7 +47,6 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, lr = LR, num_epoch
         print('Modelo nuevo')
     
     inputs, targets = training_seq(SEQ_LEN)
-    # inputs = torch.from_numpy(inputs).float()
     targets = torch.from_numpy(targets).long()
 
     dataset = torch.utils.data.TensorDataset(inputs, targets)
@@ -62,9 +61,7 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, lr = LR, num_epoch
             optimizer.zero_grad()
 
             #hacemos feed forward
-            # print(f'***batch_inputs: {batch_inputs.shape}')
             outputs = model.feed_forward(batch_inputs)
-            # print(f'***outputs: {outputs.shape}')
             loss = criterion(outputs, batch_targets)
 
             #backpropagation
