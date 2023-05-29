@@ -18,7 +18,7 @@ SONGS_PATH = 'deutschl/erk'
 SAVE_DIR = 'data_preprocesed'
 FINAL_PATH = 'dataset_doc'
 MAP_PATH = 'dic.json'
-SEQ_LEN = 32
+SEQ_LEN = 64
 LONG_NOTES = [0.25, 0.5, 0.75, 1.0, 1.5, 2, 3, 4]
 
 def load_music(path):

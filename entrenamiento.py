@@ -10,8 +10,8 @@ import numpy as np
 OUTPUT_UNITS = 38
 NUM_UNITS = 256
 LR = 0.01
-EPOCH = 1
-BATCH_SIZE = 32
+EPOCH = 3
+BATCH_SIZE = 64
 SAVE_MODEL_PATH = 'model.pt'
 
 #clase para generar una red lstm
@@ -27,14 +27,10 @@ class model_lstm(nn.Module):
         # self.softmax = nn.Softmax(dim = 1)
 
     def feed_forward(self, x):
-        # print(f'antes de lstm: {x.shape}')
         lstm_out, _ = self.lstm(x)
-        # print(f'despues de lstm: {lstm_out.shape}')
         lstm_out = self.dropout(lstm_out)
         lstm_out = lstm_out[:, -1, :]
-        # print(f'despues de tomar la ultima capa: {lstm_out.shape}')
         output = self.linear(lstm_out)
-        # output = self.linear(lstm_out)
         # output = self.softmax(output)
 
         return output
