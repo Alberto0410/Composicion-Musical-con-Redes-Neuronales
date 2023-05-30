@@ -52,23 +52,15 @@ class MelodyGen:
 
             #pasamos a one hot encoding la semilla para poder
             #hacer predicciones con la red entrenada
-            # print(start_melody)
             start_np = np.reshape(start_melody, (1, len(start_melody), 1)) 
-            start_ten = torch.tensor(start_np, dtype = torch.float32)           # start_oh = F.one_hot(torch.tensor(start_melody).to(torch.int64), num_classes = len(self.map))
-            # start_oh = start_oh.unsqueeze(0).float()
+            start_ten = torch.tensor(start_np, dtype = torch.float32)           
 
             #obtenemos la prediccion
             with torch.no_grad():
                 output1 = self.model.feed_forward(start_ten)
-                # print(output1)
-                # print()
-
-            #obtenemos la nota usando la temperatura
-            # output_int = self.sample_temp(output1.detach().numpy(), temp)
 
             #obtenemos la nota con mayor probabilidad
             output_int = int(output1.argmax())
-            # print(output_int)
 
             #agregamos la nota a la melodía
             start_melody.append(output_int)
@@ -86,16 +78,16 @@ class MelodyGen:
         return melody
 
 
-    def sample_temp(self, output, temp):
-        #reescalamos y despues aplicamos softmax
-        pred = np.log(output) / temp
-        # print(pred)
-        output = np.exp(pred) / np.sum(np.exp(pred))
+    # def sample_temp(self, output, temp):
+    #     #reescalamos y despues aplicamos softmax
+    #     pred = np.log(output) / temp
+    #     # print(pred)
+    #     output = np.exp(pred) / np.sum(np.exp(pred))
 
-        #elegimos una nota de acuerdo a la distribución de probabilidad obtenida
-        output_int = np.random.choice(range(len(output)), p = output)
+    #     #elegimos una nota de acuerdo a la distribución de probabilidad obtenida
+    #     output_int = np.random.choice(range(len(output)), p = output)
 
-        return output_int
+    #     return output_int
 
 
     def midi(self, melody, file_name = 'melody_generated.midi', step_duration = 0.25):
