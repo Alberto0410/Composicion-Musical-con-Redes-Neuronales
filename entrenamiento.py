@@ -10,7 +10,7 @@ import numpy as np
 OUTPUT_UNITS = 38
 NUM_UNITS = 256
 LR = 0.001
-EPOCH = 35
+EPOCH = 25
 BATCH_SIZE = 64
 SAVE_MODEL_PATH = 'model.pt'
 
@@ -82,10 +82,9 @@ def train(output_units = OUTPUT_UNITS, num_units = NUM_UNITS, lr = LR, num_epoch
             if error_eval < best_loss:
                 best_loss = error_eval
                 best_model = model.state_dict()
+                torch.save(best_model, SAVE_MODEL_PATH)
             
             print(f'Epoch: {epoch} | Error: {error_eval}')
-
-    torch.save(best_model, SAVE_MODEL_PATH)
 
 
 
