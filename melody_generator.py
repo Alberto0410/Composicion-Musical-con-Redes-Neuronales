@@ -137,7 +137,12 @@ class MelodyGen:
 
 if __name__ == "__main__":
     mg = MelodyGen('model.pt')
-    seed = "67 _ _ _ _ _ 65 _ 64 _ 62 _ 60 _ _ _"
+    # seed = "67 _ _ _ _ _ 65 _ 64 _ 62 _ 60 _ _ _"
+    # seed = "67 _ 67 _ 67 _ _ 65 64 _ 64 _ 64 _ _"
+    # seed = "60 _ _ _ 64 _ _ _ 67 _ 69 _ 67 _  65 _"
+
+    #Escribimos una semilla en la menor
+    seed = "69 _ 67 _ 65 _ 64 _ 62 _ 60 _ 62 _ 64 _ 65 _ 68 _ 69 _ _ _ _"
     melody = mg.generation(seed, 500, SEQ_LEN, 0.7)
     print(melody)
     mg.midi(melody)
